@@ -1,0 +1,55 @@
+version: '2'
+
+services:
+  collectd:
+    container_name: collectd
+    image: fr3nd/collectd
+    privileged: true
+    network_mode: host
+    volumes:
+      - /proc:/mnt/proc:ro
+      - ./collectd.conf:/etc/collectd/collectd.conf
+    restart: unless-stopped
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+      - "25826:25826/udp"
+    volumes:
+      - /var/lib/influxdb
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./types.db:/usr/share/collectd/types.db:ro
+    restart: unless-stopped
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/lib/grafana
+    restart: unless-stopped
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      - TZ=<TimeZone>
+      - PLEX_CLAIM=<ClaimCode>
+      - ADVERTISE_IP=http://<hostname>:32400/
+    hostname: <hostname>
+    volumes:
+      - .plex/config:/config
+      - .plex/transcode:/transcode
+      - /media/plex:/data
